@@ -1,26 +1,27 @@
-require 'builder'
-
 class HomeAction < Cramp::Action
+  use_fiber_pool
   self.transport = :sse
 
-  on_start  :create_redis
-  on_finish :destroy_redis
-
+  #keep_connection_alive
   periodic_timer :noop, :every => 15
 
+  on_finish :destroy_redis
+
+  # FIXME: authenticate user!
   def start
-    rooms = params[:rooms] || []
-    if rooms.empty?
-      render_status :disconnected
+    if params[:user] and params[:user].strip.empty?
+      render_status :failure
       finish
     else
+      @user = params[:user]
       create_redis
-      subscribe(*rooms)
+      connect
     end
   end
 
   def create_redis
-    @sub = EM::Hiredis.connect('redis://localhost:6379/0').pubsub
+    @redis = EM::Hiredis.connect(ENV['REDIS_URL'])
+    @sub   = @redis.pubsub
     ensure_redis_connection
   end
 
@@ -34,26 +35,42 @@ class HomeAction < Cramp::Action
   end
 
   private
-    def subscribe(*rooms)
-      rooms.each { |room| @sub.subscribe(room) }
-      @sub.on(:message) { |channel, message| render(message) }
+    def connect
+      refresh_subscriptions
+      @sub.on(:message) do |channel, message|
+        render(message)
+        refresh_subscriptions if channel =~ /^user:/
+      end
     end
 
-    # Formats a status message.
+    def refresh_subscriptions
+      @redis.lrange("user:#{@user}:channels", 0, -1).callback do |channels|
+        subscribe("user:#{@user}", *channels)
+      end
+    end
+
+    # Subscribes to new channels and unsubscribes from removed ones.
+    def subscribe(*channels)
+      @channels ||= []
+      added   = channels - @channels
+      removed = @channels - channels
+      @sub.subscribe(*added) if added.any?
+      @sub.unsubscribe(*removed) if removed.any?
+      @channels = channels
+    end
+
     def render_status(status)
       render Builder::XmlMarkup.new.message { |m| m.status(status.to_s) }
     end
 
     # Ensures that the Redis server is alive. Renders an OK status message if
-    # connection was possible, otherwise renders and ERROR status message.
+    # we could connect, otherwise renders an ERROR status message.
     def ensure_redis_connection
-      defer = @sub.get('test-redis-connection')
+      defer = @redis.get('test-redis-connection')
       defer.errback do |e|
         render_status :error
         finish
       end
-      defer.callback do |value|
-        render_status :ok
-      end
+      defer.callback { |v| render_status :ok }
     end
 end
