@@ -1,7 +1,7 @@
 require "rubygems"
 require "bundler"
 
-module Pusher
+module Sisyphus
   class Application
 
     def self.root(path = nil)
@@ -24,7 +24,7 @@ module Pusher
   end
 end
 
-Bundler.require(:default, Pusher::Application.env)
+Bundler.require(:default, Sisyphus::Application.env)
 
 # Preload application classes
 Dir['./app/**/*.rb'].each {|f| require f}

@@ -1,15 +1,15 @@
 require './application'
-Pusher::Application.initialize!
+Sisyphus::Application.initialize!
 
 # Development middlewares
-if Pusher::Application.env == 'development'
+if Sisyphus::Application.env == 'development'
   use AsyncRack::CommonLogger
 
   # Enable code reloading on every request
   use Rack::Reloader, 0
 
   # Serve assets from /public
-  use Rack::Static, :urls => ["/javascripts"], :root => Pusher::Application.root(:public)
+  use Rack::Static, :urls => ["/javascripts"], :root => Sisyphus::Application.root(:public)
 end
 
 # Running thin :
@@ -22,4 +22,4 @@ end
 #
 #   bundle exec thin --max-persistent-conns 1024 --timeout 0 -V -R config.ru start
 #
-run Pusher::Application.routes
+run Sisyphus::Application.routes

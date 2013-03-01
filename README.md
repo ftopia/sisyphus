@@ -58,7 +58,7 @@ And you should see a response like:
 
 ## Technologies
 
-Pusher is a [Cramp](http://cramp.in) app, built on Ruby 1.9.3+ using the Redis
+Sisyphus is a [Cramp](http://cramp.in) app, built on Ruby 1.9.3+ using the Redis
 Pub/Sub messaging service for passing messages from the main app to the service,
 and eventually forwarding them to the clients as *Server Sent Events* (EventSource).
 
