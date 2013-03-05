@@ -1,12 +1,11 @@
 require 'yaml'
 
 class HomeAction < Cramp::Action
-  use_fiber_pool
+  # use_fiber_pool
+  # keep_connection_alive
+
   self.transport = :sse
-
-  #keep_connection_alive
   periodic_timer :noop, :every => 15
-
   on_finish :destroy_redis
 
   # FIXME: authenticate user!
@@ -36,7 +35,12 @@ class HomeAction < Cramp::Action
     render('noop')
   end
 
-  private
+  protected
+    # Refreshes subscriptions, then listens for messages to be proxied.
+    #
+    # Will refresh the subscriptions whenever a message is received on the user
+    # channel, since there is a high probability for the message to be related
+    # to right changes.
     def connect
       refresh_subscriptions
       @sub.on(:message) do |channel, message|
@@ -45,13 +49,14 @@ class HomeAction < Cramp::Action
       end
     end
 
+    # Fetches the new list of user channels to update the subscriptions.
     def refresh_subscriptions
       @redis.lrange("user:#{@user}:channels", 0, -1).callback do |channels|
         subscribe("user:#{@user}", *channels)
       end
     end
 
-    # Subscribes to new channels and unsubscribes from removed ones.
+    # Subscribes to the given channels and unsubscribes from removed ones.
     def subscribe(*channels)
       @channels ||= []
       added   = channels - @channels
@@ -65,7 +70,7 @@ class HomeAction < Cramp::Action
       render Builder::XmlMarkup.new.message { |m| m.status(status.to_s) }
     end
 
-    # Ensures that the Redis server is alive. Renders an OK status message if
+    # Ensures that the Redis server is alive then renders an OK status message if
     # we could connect, otherwise renders an ERROR status message.
     def ensure_redis_connection
       defer = @redis.get('test-redis-connection')
