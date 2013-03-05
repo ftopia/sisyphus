@@ -5,18 +5,18 @@ class HomeAction < Cramp::Action
   # keep_connection_alive
 
   self.transport = :sse
-  periodic_timer :noop, :every => 15
+  periodic_timer :noop, :every => (Sisyphus::Application.env == 'test' ? 2 : 15)
   on_finish :destroy_redis
 
   # FIXME: authenticate user!
   def start
-    if params[:user] and params[:user].strip.empty?
+    if params[:user].nil? or params[:user].strip.empty?
       render_status :failure
       finish
     else
       @user = params[:user]
       create_redis
-      connect
+      try_to_connect
     end
   end
 
@@ -36,6 +36,19 @@ class HomeAction < Cramp::Action
   end
 
   protected
+    # Tries to connect the user.
+    def try_to_connect
+      @redis.exists("user:#{@user}:channels").callback do |value|
+        if value == 0
+          render_status :failure
+          finish
+        else
+          render_status :ok
+          connect
+        end
+      end
+    end
+
     # Refreshes subscriptions, then listens for messages to be proxied.
     #
     # Will refresh the subscriptions whenever a message is received on the user
@@ -51,8 +64,13 @@ class HomeAction < Cramp::Action
 
     # Fetches the new list of user channels to update the subscriptions.
     def refresh_subscriptions
-      @redis.lrange("user:#{@user}:channels", 0, -1).callback do |channels|
-        subscribe("user:#{@user}", *channels)
+      @redis.smembers("user:#{@user}:channels").callback do |channels|
+        if channels.empty?
+          render_status :disconnected
+          finish
+        else
+          subscribe(*channels)
+        end
       end
     end
 
@@ -61,8 +79,8 @@ class HomeAction < Cramp::Action
       @channels ||= []
       added   = channels - @channels
       removed = @channels - channels
-      @sub.subscribe(*added) if added.any?
-      @sub.unsubscribe(*removed) if removed.any?
+      added.each   { |c| @sub.subscribe(c)   } if added.any?
+      removed.each { |c| @sub.unsubscribe(c) } if removed.any?
       @channels = channels
     end
 
@@ -78,15 +96,14 @@ class HomeAction < Cramp::Action
         render_status :error
         finish
       end
-      defer.callback { |v| render_status :ok }
+      #defer.callback { |v| render_status :ok }
     end
 
   private
     def redis_url
       @redis_url ||= begin
-        rack_env = ENV['RACK_ENV']
         yml = YAML.load_file(File.expand_path('../../../config/redis.yml', __FILE__))
-        yml[rack_env]['url']
+        yml[Sisyphus::Application.env]['url']
       end
     end
 end
