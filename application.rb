@@ -20,7 +20,13 @@ module Sisyphus
     # Initialize the application
     def self.initialize!
     end
+  end
 
+  def self.redis_url
+    @redis_url ||= begin
+      yml = YAML.load_file(File.expand_path('../config/redis.yml', __FILE__))
+      yml[Sisyphus::Application.env]['url']
+    end
   end
 end
 

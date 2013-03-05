@@ -67,46 +67,48 @@ class HomeActionTest < Cramp::TestCase
     end
   end
 
-  # FIXME: fix some race conditions, and prefer to discuss with the app instead of relying on a thread...
+  # FIXME: fix some race conditions, and prefer to discuss with the app instead of relying on a thread.
   test "must refresh subscriptions when receiving a message on user channel" do
-    Thread.new do
-      wait
+    t1 = Thread.new do
+      Thread.stop
       redis.write ['SADD', 'user:1:channels', 'room:7']; redis.read
       publish('user:1', 'ADDED ROOM 7')
-      wait
+      Thread.stop
       redis.write ['SREM', 'user:1:channels', 'room:5']; redis.read
       publish('user:1', 'REMOVED ROOM 5')
-      wait
+      Thread.stop
       publish('room:5', 'message for room 5', ensure: false)
       publish('room:7', 'message for room 7')
     end
 
     messages = [ /ADDED ROOM 7/, /REMOVED ROOM 5/, /message for room 7/ ]
-
     get '/?user=1' do |status, headers, body|
       body.each_with_index do |chunk, index|
         @waiting = false
         case index
         when 0
           assert_status :ok, chunk
-        #  redis.write ['SADD', 'user:1:channels', 'room:7']; redis.read
-        #  publish('user:1', 'ADDED ROOM 7')
-        #when 1
-        #  assert_match(/ADDED ROOM 7/, chunk)
-        #  redis.write ['SREM', 'user:1:channels', 'room:5']; redis.read
-        #  publish('user:1', 'REMOVED ROOM 5')
-        #when 2
-        #  assert_match(/REMOVED ROOM 5/, chunk)
-        #  publish('room:5', 'message for room 5')
-        #  publish('room:7', 'message for room 7')
-        #when 3
-        #  assert_match(/message for room 7/, chunk)
-        #  stop
+          t1.wakeup
         else
           assert_match messages.shift, chunk unless chunk =~ /data: noop/
           stop if messages.empty?
+          begin
+            t1.wakeup
+          rescue
+          end
         end
       end
+    end
+  end
+
+  def assert_status(status, chunk)
+    assert_match %r{<message><status>#{status}</status></message>}, chunk
+  end
+
+  def publish_in_thread(channel, message)
+    Thread.new do
+      Thread.pass while @waiting
+      redis.write ['PUBLISH', channel, message]; redis.read
     end
   end
 
@@ -124,21 +126,9 @@ class HomeActionTest < Cramp::TestCase
     Thread.pass while @waiting
   end
 
-  def assert_status(status, chunk)
-    assert_match %r{<message><status>#{status}</status></message>}, chunk
-  end
-
-  def publish_in_thread(channel, message)
-    Thread.new do
-      Thread.pass while @waiting
-      redis.write ['PUBLISH', channel, message]; redis.read
-    end
-  end
-
   def redis
     @redis ||= begin
-      yml = YAML.load_file(File.expand_path('../../config/redis.yml', __FILE__))[Sisyphus::Application.env]
-      yml['url'] =~ %r{redis://(.+?):(\d+)/(\d+)}
+      Sisyphus.redis_url =~ %r{redis://(.+?):(\d+)/(\d+)}
       conn = Hiredis::Connection.new
       conn.connect($1, $2.to_i)
       conn.write ['SELECT', $3]; conn.read

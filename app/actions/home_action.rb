@@ -21,7 +21,7 @@ class HomeAction < Cramp::Action
   end
 
   def create_redis
-    @redis = EM::Hiredis.connect(redis_url)
+    @redis = EM::Hiredis.connect(Sisyphus.redis_url)
     @sub   = @redis.pubsub
     ensure_redis_connection
   end
@@ -97,13 +97,5 @@ class HomeAction < Cramp::Action
         finish
       end
       #defer.callback { |v| render_status :ok }
-    end
-
-  private
-    def redis_url
-      @redis_url ||= begin
-        yml = YAML.load_file(File.expand_path('../../../config/redis.yml', __FILE__))
-        yml[Sisyphus::Application.env]['url']
-      end
     end
 end
