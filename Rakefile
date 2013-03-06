@@ -10,12 +10,12 @@ end
 
 desc "Runs sisyphus in the foreground"
 task :run do
-  exec("bin/thin --max-persistent-conns 1024 --timeout 0 start")
+  exec("bin/thin --port 3001 --max-persistent-conns 1024 --timeout 0 start")
 end
 
 desc "Starts sisyphus"
 task :start do
-  exec("bin/thin -d --max-persistent-conns 1024 --timeout 0 start")
+  exec("bin/thin --port 3001 -d --max-persistent-conns 1024 --timeout 0 start")
 end
 
 desc "Stops sisyphus"
