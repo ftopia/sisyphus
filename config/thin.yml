@@ -6,7 +6,7 @@ wait: 30
 log: log/thin.log
 max_conns: 1024
 require: []
-environment: production
+environment: staging
 max_persistent_conns: 1024
 servers: 1
 # threaded: true
