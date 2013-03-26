@@ -1,9 +1,8 @@
----
 user: deploy
-group: deploy
+group: www-data
 pid: tmp/pids/thin.pid
 timeout: 0
-# wait: 30
+wait: 30
 log: log/thin.log
 max_conns: 1024
 require: []
@@ -14,6 +13,6 @@ servers: 1
 # no-epoll: true
 daemonize: true
 socket: /tmp/thin.sock
-chdir: /mnt/sisyphus
+chdir: /mnt/sisyphus/current
 tag: sisyphus
 
