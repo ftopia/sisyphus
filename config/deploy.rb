@@ -3,6 +3,7 @@ set :application, "sisyphus"
 #default_run_options[:pty] = true
 set :ssh_options, { :forward_agent => true }
 set :use_sudo, false
+set :normalize_asset_timestamps, false
 
 require 'rvm/capistrano'
 set :rvm_type, :system
