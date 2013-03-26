@@ -1,4 +1,4 @@
-source :rubygems
+source 'https://rubygems.org'
 
 group :test do
   gem 'minitest'
@@ -8,6 +8,11 @@ end
 
 group :development, :test do
   gem 'rake'
+end
+
+group :development do
+  gem 'capistrano'
+  gem 'rvm-capistrano'
 end
 
 gem 'cramp'

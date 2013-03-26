@@ -1,0 +1,19 @@
+---
+user: deploy
+group: deploy
+pid: tmp/pids/thin.pid
+timeout: 0
+# wait: 30
+log: log/thin.log
+max_conns: 1024
+require: []
+environment: production
+max_persistent_conns: 1024
+servers: 1
+# threaded: true
+# no-epoll: true
+daemonize: true
+socket: tmp/thin.sock
+chdir: /mnt/sisyphus
+tag: sisyphus
+
