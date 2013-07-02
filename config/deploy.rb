@@ -17,10 +17,10 @@ set :scm, :git
 set :branch, "master"
 set :deploy_via, :remote_cache
 set :user, "deploy"
-set :deploy_to, "/mnt/sisyphus"
+set :deploy_to, "/home/deploy"
 
-role :web, "ec2-54-228-219-8.eu-west-1.compute.amazonaws.com"
-role :app, "ec2-54-228-219-8.eu-west-1.compute.amazonaws.com"
+role :web, "ec2-54-216-129-160.eu-west-1.compute.amazonaws.com"
+role :app, "ec2-54-216-129-160.eu-west-1.compute.amazonaws.com"
 
 # if you want to clean up old releases on each deploy uncomment this:
 # after "deploy:restart", "deploy:cleanup"

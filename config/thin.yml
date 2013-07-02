@@ -13,6 +13,6 @@ servers: 1
 # no-epoll: true
 daemonize: true
 socket: /tmp/thin.sock
-chdir: /mnt/sisyphus/current
+chdir: /home/deploy/current
 tag: sisyphus
 
