@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ftopia/sinapse.git
-  revision: 55c87081d5332e41f066fb56bba4c95a3169f47f
+  revision: fe7ae4c54952315fdbae7d2d5a05cbf4f930c24a
   branch: libcurl
   specs:
     sinapse (0.2.0)
@@ -24,16 +24,18 @@ GEM
     async-rack (0.5.1)
       rack (~> 1.1)
     connection_pool (2.0.0)
-    dotenv (0.7.0)
+    dotenv (0.11.1)
+      dotenv-deployment (~> 0.0.2)
+    dotenv-deployment (0.0.2)
     em-synchrony (1.0.3)
       eventmachine (>= 1.0.0.beta.1)
     em-websocket (0.3.8)
       addressable (>= 2.1.1)
       eventmachine (>= 0.12.9)
     eventmachine (1.0.3)
-    foreman (0.67.0)
-      dotenv (~> 0.7.0)
-      thor (~> 0.17.0)
+    foreman (0.71.0)
+      dotenv (~> 0.11.1)
+      thor (~> 0.19.1)
     goliath (1.0.3)
       async-rack
       em-synchrony (>= 1.0.0)
@@ -59,10 +61,10 @@ GEM
       rack (>= 0.9.1)
     rack-respond_to (0.9.8)
       rack-accept-media-types (>= 0.6)
-    redis (3.0.7)
-    thor (0.17.0)
-    thread_safe (0.3.3)
-    tzinfo (1.1.0)
+    redis (3.1.0)
+    thor (0.19.1)
+    thread_safe (0.3.4)
+    tzinfo (1.2.1)
       thread_safe (~> 0.1)
 
 PLATFORMS
