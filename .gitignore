@@ -1,4 +1,3 @@
-.bundle
-bin
-log
-tmp
+.ruby-version
+.ruby-gemset
+/log/*
