@@ -1,1 +1,1 @@
-web: bundle exec sinapse -p $PORT -l log/log.log
+web: bundle exec sinapse -p $PORT --stdout --verbose
